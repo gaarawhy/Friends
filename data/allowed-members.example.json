@@ -1,0 +1,13 @@
+[
+  { "id": "100000000000000001" },
+  {
+    "id": "100000000000000002",
+    "boost": "boost-3",
+    "nitro": "nitro-ouro"
+  },
+  {
+    "id": "100000000000000003",
+    "nitro": "nitro-opala",
+    "badges": ["apoiador", "bravery"]
+  }
+]

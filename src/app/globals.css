@@ -1,0 +1,300 @@
+@import "tailwindcss";
+
+:root {
+  --background: #000000;
+  --foreground: #ffffff;
+  /* Progresso do scroll da primeira tela (0 a 1), escrito por ScrollProgress. */
+  --scroll: 0;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sora);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  /* Os cards passam do ponto na entrada; não deve virar scroll lateral. */
+  overflow-x: clip;
+}
+
+.font-sora {
+  font-family: var(--font-sora), sans-serif;
+}
+
+/* ---------- Clipe de fundo ---------- */
+/* No topo o vídeo aparece limpo; ao rolar ele recua, desfoca e escurece. */
+
+.bg-video {
+  transform: scale(calc(1 + var(--scroll) * 0.22));
+  filter: blur(calc(var(--scroll) * 14px))
+    brightness(calc(1 - var(--scroll) * 0.35));
+  opacity: calc(1 - var(--scroll) * 0.55);
+  will-change: transform, filter, opacity;
+}
+
+.bg-overlay {
+  background-color: rgb(0 0 0 / calc(0.12 + var(--scroll) * 0.5));
+}
+
+/* ---------- HUD (volume e visitas) ---------- */
+
+/* Sem pílula de vidro: só os ícones soltos sobre o clipe. */
+.hud {
+  position: fixed;
+  top: 26px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgb(255 255 255 / 0.9);
+  /* Sem fundo atrás, a sombra é o que segura a leitura sobre o vídeo. */
+  filter: drop-shadow(0 2px 8px rgb(0 0 0 / 0.75));
+}
+
+.hud-left {
+  left: 26px;
+}
+
+.hud-right {
+  right: 26px;
+}
+
+/* Visitas */
+
+.views-icon {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+}
+
+.views-count {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Volume */
+
+.volume-button {
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: inherit;
+}
+
+.volume-icon {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+  stroke: currentColor;
+  transition: transform 0.25s ease;
+}
+
+/* O corpo do alto-falante é preenchido; só as ondas levam traço. */
+.volume-icon path:first-child {
+  stroke: none;
+}
+
+.volume-button:hover .volume-icon {
+  transform: scale(1.1);
+}
+
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 82px;
+  height: 4px;
+  border-radius: 999px;
+  cursor: pointer;
+  background: linear-gradient(
+    to right,
+    rgb(255 255 255 / 0.95) calc(var(--level) * 100%),
+    rgb(255 255 255 / 0.2) calc(var(--level) * 100%)
+  );
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.5);
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: none;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.5);
+}
+
+/* Com mouse a barra só abre no hover; no toque ela fica sempre visível. */
+@media (hover: hover) {
+  .volume-slider {
+    width: 0;
+    opacity: 0;
+    transition:
+      width 0.35s cubic-bezier(0.22, 0.86, 0.32, 1),
+      opacity 0.25s ease;
+  }
+
+  .volume:hover .volume-slider,
+  .volume:focus-within .volume-slider {
+    width: 82px;
+    opacity: 1;
+  }
+}
+
+/* ---------- Portão de entrada ---------- */
+/* Cobre a tela até o primeiro clique, que é o que libera o áudio do clipe. */
+
+@keyframes gateIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes gateOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.intro-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  background-color: rgb(0 0 0 / 0.82);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  animation: gateIn 0.4s ease-in-out;
+}
+
+.intro-gate-out {
+  animation: gateOut 0.65s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes gateLabelBreathe {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes gateLabelOut {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.35);
+    filter: blur(8px);
+  }
+}
+
+.intro-gate-label {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  /* O letter-spacing empurra tudo pra esquerda; compensa no último caractere. */
+  text-indent: 0.3em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.85);
+  text-shadow: 0 2px 16px rgb(0 0 0 / 0.6);
+  animation: gateLabelBreathe 3.4s ease-in-out infinite;
+  transition:
+    color 0.3s ease,
+    letter-spacing 0.45s cubic-bezier(0.22, 0.86, 0.32, 1);
+}
+
+.intro-gate:hover .intro-gate-label {
+  color: rgb(255 255 255 / 1);
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  /* `none` e não `paused`: a animação pausada continuaria mandando na opacidade. */
+  animation: none;
+  opacity: 1;
+}
+
+.intro-gate-label-out {
+  animation: gateLabelOut 0.6s cubic-bezier(0.22, 0.86, 0.32, 1) forwards;
+}
+
+/* ---------- Entrada dos cards ---------- */
+/* Vêm arremessados de baixo, tortos e desfocados, passam do ponto e voltam. */
+
+.reveal {
+  --reveal-x: 0px;
+  --reveal-rotate: 0deg;
+
+  opacity: 0;
+  transform: translate3d(var(--reveal-x), 300px, 0) scale(0.62)
+    rotate(var(--reveal-rotate));
+  filter: blur(38px) brightness(2);
+  transform-origin: center bottom;
+  transition:
+    opacity 0.7s cubic-bezier(0.19, 1, 0.3, 1),
+    transform 1.35s cubic-bezier(0.16, 2.6, 0.3, 1),
+    filter 1s cubic-bezier(0.19, 1, 0.3, 1);
+  will-change: transform, opacity, filter;
+}
+
+/* Cada coluna entra de um lado, pra fileira não subir toda igual. */
+.reveal:nth-child(3n + 1) {
+  --reveal-x: -70px;
+  --reveal-rotate: -11deg;
+}
+
+.reveal:nth-child(3n + 3) {
+  --reveal-x: 70px;
+  --reveal-rotate: 11deg;
+}
+
+.reveal-in {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  filter: blur(0) brightness(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-video {
+    transform: none;
+    filter: none;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+}
